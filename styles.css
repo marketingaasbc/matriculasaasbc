@@ -618,3 +618,18 @@
     font-size:10px;
   }
 }
+
+
+/* ===== V2.8 ajustes programas e campus ===== */
+.programs-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+.program-count{display:none !important;}
+@media(max-width:980px){
+  .programs-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+}
+.gallery-library img{object-position:center 56%;}
+.gallery-courtyard img{object-position:center 42%;}
+@media(max-width:760px){
+  .programs-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .gallery-library img{object-position:center 54%;}
+  .gallery-courtyard img{object-position:center 40%;}
+}
