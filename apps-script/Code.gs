@@ -5,7 +5,7 @@
  *   INTEGRATION_SECRET = segredo compartilhado com GOOGLE_SHEETS_SECRET na Vercel
  * PUBLICAÇÃO: Implantar > Nova implantação > Aplicativo da Web > Executar como eu;
  * Acesso: Qualquer pessoa (a autenticação é pelo segredo validado no body).
- * ATENÇÃO: teste com um lead fictício e confira a aba Leads antes de publicar.
+ * ATENÇÃO: importe a planilha modelo, execute prepararPlanilha() uma vez e teste antes de divulgar.
  */
 const TAB_NAME = 'Leads';
 const HEADERS = [
@@ -14,6 +14,31 @@ const HEADERS = [
   'UTM Source','UTM Medium','UTM Campaign','UTM Content','UTM Term',
   'GCLID','FBCLID','Página de origem','Referência'
 ];
+
+/** Executar manualmente UMA VEZ depois de definir SHEET_ID e INTEGRATION_SECRET. */
+function prepararPlanilha() {
+  var sheetId = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  if (!sheetId) throw new Error('Configure SHEET_ID nas Propriedades do script.');
+  var book = SpreadsheetApp.openById(sheetId);
+  var sheet = book.getSheetByName(TAB_NAME) || book.insertSheet(TAB_NAME);
+  ensureHeaders_(sheet);
+  sheet.setFrozenRows(1);
+  sheet.getRange(1,1,1,HEADERS.length).setFontWeight('bold').setBackground('#54182c').setFontColor('#ffffff');
+  sheet.getRange('B:B').setNumberFormat('@');
+  sheet.getRange('D:D').setNumberFormat('@');
+  Logger.log('Aba Leads validada: '+book.getUrl());
+}
+
+function ensureHeaders_(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1,1,1,HEADERS.length).setValues([HEADERS]);
+    return;
+  }
+  var actual = sheet.getRange(1,1,1,HEADERS.length).getDisplayValues()[0];
+  if (actual.join('|') !== HEADERS.join('|')) {
+    throw new Error('Cabeçalhos da aba Leads diferentes do modelo. Não altere a linha 1 nem a ordem das colunas.');
+  }
+}
 
 function output_(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
@@ -37,11 +62,7 @@ function doPost(e) {
     lock.waitLock(20000);
     var book = SpreadsheetApp.openById(sheetId);
     var sheet = book.getSheetByName(TAB_NAME) || book.insertSheet(TAB_NAME);
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(HEADERS);
-      sheet.setFrozenRows(1);
-      sheet.getRange(1,1,1,HEADERS.length).setFontWeight('bold').setBackground('#54182c').setFontColor('#ffffff');
-    }
+    ensureHeaders_(sheet);
     // Coluna B é a chave de idempotência.
     if (sheet.getLastRow() > 1) {
       var found = sheet.getRange(2,2,sheet.getLastRow()-1,1).createTextFinder(String(data.request_id)).matchEntireCell(true).findNext();

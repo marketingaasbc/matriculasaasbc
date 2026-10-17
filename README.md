@@ -108,3 +108,23 @@ Integração RD: [Conversão via API Key — documentação](https://developers.
 - Incluída fonte oficial do Bernoulli no próprio site e `FONTES-BERNOULLI.md` para rastreabilidade.
 - Formulário, RD Station, Google Apps Script, roteamento e configurações existentes foram preservados.
 - Verificar periodicamente os números na fonte oficial e manter a ressalva de que não são resultados próprios da American Academy SBC.
+
+## V2.9 — RD Station e planilha Google Sheets (17/10/2026)
+
+- Código de monitoramento RD informado pela escola incorporado em `script.js` e ativado mediante aceite dos cookies opcionais no banner. Atualizados os textos de cookies/privacidade.
+- Backend `/api/lead` existente preservado para enviar conversão via `RD_API_KEY` e o registro via Apps Script. Como o formulário envia por `fetch`, o monitoramento sozinho não deve ser considerado garantia da conversão.
+- Google Apps Script revisado com `prepararPlanilha()` e validação da primeira linha, mantendo as **20 colunas** do modelo enviado em arquivo Excel separado.
+- Frontend mantém o mesmo `request_id` em tentativas após timeout, minimizando linhas duplicadas no Sheets.
+- Atualizada uma menção remanescente na faixa de benefícios para retirar a contagem de programas.
+- Detalhes em `PASSO_A_PASSO_RD_GOOGLE_SHEETS.md`. **Todas as chaves e URLs de implantação precisam ser configuradas na conta real.**
+
+
+## WhatsApp flutuante (V3.0)
+
+- Foi adicionado um botão circular (somente o ícone WhatsApp) na parte inferior direita. No mobile ele fica acima da barra fixa de "Agende uma visita".
+- O botão abre um popup responsivo com **nome, e-mail, WhatsApp e autorização de contato**.
+- Ao enviar, a LP registra o contato no **mesmo endpoint `/api/lead`** do formulário principal. O Google Sheets grava a origem na coluna `Mensagem`, como `Origem do lead: botão flutuante de WhatsApp da LP Matrículas 2027.`. A RD Station recebe a tag `via-whatsapp-flutuante` e a conversão `AA SBC | Matrículas 2027 | WhatsApp`.
+- Quando o cadastro é confirmado em pelo menos um destino (RD ou Sheets), a página abre o WhatsApp com mensagem pré-preenchida. Se ambas as integrações falharem, um link separado permite falar no WhatsApp mesmo assim, explicitamente sem garantir registro do lead.
+- Número configurado: **(11) 4121-6355** (WhatsApp/Tel anunciado no site oficial `www.aasbc.com.br`, consultado em 17/10/2026). Se a escola desejar outro número de captação, edite a constante `WHATSAPP_DESTINATION` no início de `script.js` (somente dígitos, DDI+DDD+número). Faça deploy novamente.
+- A planilha, `apps-script/Code.gs`, chaves e configuração da Vercel permanecem iguais à V2.9. Nenhum novo serviço é necessário.
+- Recomenda-se testar um lead pelo botão flutuante no site publicado e confirmar recebimento em RD e Sheets, seguido da abertura da conversa no WhatsApp.

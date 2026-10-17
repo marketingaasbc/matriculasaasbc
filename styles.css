@@ -633,3 +633,65 @@
   .gallery-library img{object-position:center 54%;}
   .gallery-courtyard img{object-position:center 40%;}
 }
+
+
+/* ===== V3.0: Botão flutuante WhatsApp + popup de pré-cadastro ===== */
+.wa-floating{
+  position:fixed;right:25px;bottom:23px;z-index:90;
+  display:grid;place-items:center;width:66px;height:66px;padding:7px;
+  border-radius:50%;border:2px solid #ffffff;background:#fff;
+  box-shadow:0 8px 27px rgba(21,41,29,.25),0 0 0 1px rgba(13,94,52,.12);
+  transition:transform .2s,box-shadow .2s;
+}
+.wa-floating img{display:block;width:100%;height:100%;object-fit:contain;}
+.wa-floating:hover{transform:translateY(-4px);box-shadow:0 13px 31px rgba(21,41,29,.3);}
+.wa-floating:focus-visible{outline:3px solid #0b9c67;outline-offset:4px;}
+.wa-contact-dialog{
+  border:none;border-radius:24px;background:transparent;padding:0;
+  color:#3a2730;width:min(420px,calc(100% - 30px));
+  max-height:min(90dvh,730px);overflow-y:auto;
+  box-shadow:0 25px 95px rgba(28,7,20,.32);
+}
+.wa-contact-dialog::backdrop{background:rgba(36,11,26,.68);backdrop-filter:blur(3px);}
+.wa-dialog-inner{background:#fcfaf6;padding:34px 34px 30px;position:relative;}
+.wa-close{position:absolute;right:16px;top:12px;display:grid;place-items:center;
+  width:38px;height:38px;padding:0;border:0;border-radius:50%;background:#f0e9e4;
+  color:#54182c;font-size:25px;font-weight:400;line-height:1;}
+.wa-close:hover{background:#e6d8d2;}
+.wa-eyebrow{display:block;margin-bottom:11px;color:#a27954;font-weight:800;font-size:10px;letter-spacing:.12em;}
+.wa-contact-dialog h2{font-size:clamp(30px,5vw,37px);line-height:1.12;letter-spacing:-.035em;color:#54182c;margin:0 30px 9px 0;}
+.wa-contact-dialog p{font-size:13px;line-height:1.55;color:#71636b;margin:0 0 22px;}
+#wa-lead-form{display:flex;flex-direction:column;gap:13px;}
+#wa-lead-form>label:not(.wa-consent){font-size:12px;font-weight:800;color:#4c2a3c;display:flex;flex-direction:column;gap:6px;}
+#wa-lead-form>label>span[aria-hidden]{color:#b13045;}
+#wa-lead-form input:not([type="checkbox"]){width:100%;min-height:45px;
+  border:1px solid #e1d8d3;border-radius:11px;background:white;color:#381f2d;
+  outline:none;padding:11px 13px;font-weight:500;font-size:13px;}
+#wa-lead-form input:not([type="checkbox"]):focus{border-color:#af798d;box-shadow:0 0 0 3px rgba(84,24,44,.09);}
+#wa-lead-form input::placeholder{color:#a19693;}
+#wa-lead-form .wa-consent{display:flex;align-items:flex-start;gap:9px;color:#615761;font-size:10.5px;line-height:1.5;margin:3px 0 0;}
+#wa-lead-form .wa-consent input{width:16px;height:16px;margin:1px 0 0;flex-shrink:0;accent-color:#54182c;}
+.wa-privacy-link{padding:0;border:0;background:none;font-size:inherit;text-decoration:underline;color:#54182c;font-weight:800;}
+.wa-honeypot{position:absolute!important;left:-100vw!important;width:1px!important;height:1px!important;overflow:hidden!important;}
+.wa-start{min-height:49px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;background:#16854e;border:0;border-radius:12px;color:white;
+  font-size:13px;font-weight:800;margin-top:3px;transition:background .2s;}
+.wa-start:hover{background:#0e6f3f;}
+.wa-start:disabled{opacity:.67;cursor:wait;}
+#wa-lead-form .wa-feedback{font-size:11px;line-height:1.5;border-radius:9px;padding:10px 12px;margin:0;color:#742d36;background:#fff0ee;border:1px solid #eac9c4;}
+#wa-lead-form .wa-feedback[hidden],#wa-lead-form .wa-fallback[hidden]{display:none;}
+#wa-lead-form .wa-fallback{color:#146e40;font-weight:800;font-size:12px;text-decoration:underline;}
+@media(max-width:760px){
+  .wa-floating{right:16px;bottom:85px;width:58px;height:58px;padding:6px;z-index:81;}
+  .wa-dialog-inner{padding:32px 24px 25px;}
+  .wa-contact-dialog{max-height:calc(100dvh - 30px);}
+}
+@media(max-width:480px){
+  .wa-floating{right:17px;bottom:88px;width:56px;height:56px;}
+  .wa-contact-dialog h2{font-size:32px;}
+}
+@media(prefers-reduced-motion:reduce){.wa-floating{transition:none;}}
+
+/* Rótulos e indicação de obrigatoriedade na mesma linha */
+#wa-lead-form .wa-field-label{display:inline-flex;align-items:baseline;gap:5px;}
+#wa-lead-form .wa-field-label b{font-weight:850;color:#b13045;}

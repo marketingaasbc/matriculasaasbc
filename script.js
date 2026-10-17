@@ -2,7 +2,13 @@
   'use strict';
   // Confirme o Pixel com a equipe antes de publicar. Somente carregamos após consentimento.
   const META_PIXEL_ID = '4024453747862467';
+  // Código de monitoramento fornecido pela escola em 17/10/2026.
+  // É carregado após o aceite dos cookies opcionais; nunca capta o formulário por si só.
+  const RD_TRACKING_SRC = 'https://d335luupugsy2.cloudfront.net/js/loader-scripts/a5d223f7-2629-4480-9bfb-a446339fede4-loader.js';
   const CAMPAIGN = 'Matriculas 2027 - AA SBC';
+  // WhatsApp divulgado no site oficial da AA SBC (11) 4121-6355.
+  // Para trocar o destino comercial, altere APENAS esta constante.
+  const WHATSAPP_DESTINATION = '551141216355';
   const gradesByStage = {
     'Educação Infantil': ['Mini Maternal / Nursery (2 anos)', 'Maternal / Toddlers (3 anos)', 'Nível 1 / Pre-Kinder (4 anos)', 'Nível 2 / Kindergarten (5 anos)'],
     'Fundamental I': ['1º ano', '2º ano', '3º ano', '4º ano', '5º ano'],
@@ -77,7 +83,7 @@
   function cookieChoice(choice) {
     try { localStorage.setItem('aa_sbc_cookie_choice', choice); } catch { /* navegação privada */ }
     $('#cookie-banner').hidden = true;
-    if (choice === 'all') loadMetaPixel();
+    if (choice === 'all') { loadMetaPixel(); loadRdTracking(); }
   }
   function loadMetaPixel() {
     if (!META_PIXEL_ID || window.fbq) return;
@@ -90,9 +96,18 @@
     window.fbq('init', META_PIXEL_ID);
     window.fbq('track','PageView');
   }
+  function loadRdTracking() {
+    if (!RD_TRACKING_SRC || document.getElementById('rd-station-tracking-loader')) return;
+    const script = document.createElement('script');
+    script.id = 'rd-station-tracking-loader';
+    script.type = 'text/javascript';
+    script.async = true;
+    script.src = RD_TRACKING_SRC;
+    document.body.appendChild(script);
+  }
   let preference = null;
   try { preference = localStorage.getItem('aa_sbc_cookie_choice'); } catch { /* ignore */ }
-  if (preference === 'all') loadMetaPixel();
+  if (preference === 'all') { loadMetaPixel(); loadRdTracking(); }
   else if (preference !== 'essential') $('#cookie-banner').hidden = false;
   $('#cookies-accept').addEventListener('click', () => cookieChoice('all'));
   $('#cookies-essential').addEventListener('click', () => cookieChoice('essential'));
@@ -115,6 +130,7 @@
     feedback.textContent = message;
     feedback.className = `form-feedback ${isSuccess ? 'is-success' : 'is-error'}`;
   };
+  let pendingRequestId = null;
   leadForm.addEventListener('submit', async e => {
     e.preventDefault();
     feedback.hidden = true;
@@ -129,8 +145,12 @@
       setFeedback('Esta é a visualização local do site. Para receber cadastros reais, publique o projeto na Vercel e configure as integrações descritas no README.');
       return;
     }
-    let requestId;
-    try { requestId = crypto.randomUUID(); } catch { requestId = `aa-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+    // Reutiliza o mesmo ID se houver timeout/reenvio, evitando linhas duplicadas no Sheets.
+    if (!pendingRequestId) {
+      try { pendingRequestId = crypto.randomUUID(); }
+      catch { pendingRequestId = `aa-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+    }
+    const requestId = pendingRequestId;
     const payload = {
       request_id: requestId,
       name: String(data.get('name') || '').trim(),
@@ -156,6 +176,7 @@
       if (!response.ok || !result.ok) throw new Error(result.message || 'Não foi possível registrar seu interesse. Tente novamente em alguns instantes.');
       setFeedback('Recebemos seu interesse! Obrigado por querer conhecer a American Academy. Nossa equipe de matrículas poderá entrar em contato pelos dados informados.', true);
       leadForm.reset();
+      pendingRequestId = null;
       setGrades('');
       if (window.fbq) window.fbq('track', 'Lead', {content_name:'Matrículas 2027 - AA SBC'});
     } catch (error) {
@@ -163,6 +184,107 @@
     } finally {
       submitButton.disabled = false;
       submitButton.querySelector('span:first-child').textContent = 'Quero agendar uma visita';
+    }
+  });
+
+  // Botão flutuante: captura um lead simplificado antes de abrir o WhatsApp.
+  // O mesmo endpoint registra o contato no Google Sheets e na RD Station.
+  const waTrigger = $('#wa-floating-trigger');
+  const waDialog = $('#wa-contact-dialog');
+  const waClose = $('#wa-close');
+  const waForm = $('#wa-lead-form');
+  const waPhone = $('[name="phone"]', waForm);
+  const waSubmit = $('.wa-start', waForm);
+  const waFeedback = $('.wa-feedback', waForm);
+  const waFallback = $('#wa-fallback');
+  let waRequestId = null;
+  function waMessage(name) {
+    const firstName = name.trim().split(/\s+/)[0] || '';
+    return `Olá! Meu nome é ${firstName}. Vim pelo site da American Academy SBC e gostaria de saber mais sobre as matrículas de 2027.`;
+  }
+  function waUrl(name) {
+    return `https://wa.me/${WHATSAPP_DESTINATION}?text=${encodeURIComponent(waMessage(name))}`;
+  }
+  function showWaFeedback(message) {
+    waFeedback.hidden = false;
+    waFeedback.textContent = message;
+  }
+  waTrigger?.addEventListener('click', () => {
+    waFeedback.hidden = true;
+    waFallback.hidden = true;
+    waDialog.showModal();
+  });
+  waClose?.addEventListener('click', () => waDialog.close());
+  waDialog?.addEventListener('click', (e) => { if (e.target === waDialog) waDialog.close(); });
+  waPhone?.addEventListener('input', () => {
+    let d = waPhone.value.replace(/\D/g, '').slice(0, 11);
+    if (!d) waPhone.value = '';
+    else if (d.length <= 2) waPhone.value = `(${d}`;
+    else if (d.length <= 6) waPhone.value = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    else if (d.length <= 10) waPhone.value = `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    else waPhone.value = `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  });
+  waForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    waFeedback.hidden = true;
+    waFallback.hidden = true;
+    if (!waForm.reportValidity()) return;
+    const data = new FormData(waForm);
+    const name = String(data.get('name') || '').trim();
+    const phone = String(data.get('phone') || '').replace(/\D/g, '');
+    const email = String(data.get('email') || '').trim().toLowerCase();
+    const dest = waUrl(name);
+    if (phone.length < 10 || phone.length > 11) {
+      showWaFeedback('Informe um número válido com DDD.');
+      waPhone.focus(); return;
+    }
+    if (location.protocol === 'file:') {
+      showWaFeedback('Publique a página na Vercel para registrar os contatos no Google Sheets e na RD Station.');
+      return;
+    }
+    // A mesma chave acompanha retries em caso de timeout.
+    if (!waRequestId) {
+      try { waRequestId = crypto.randomUUID(); }
+      catch { waRequestId = `aa-wa-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+    }
+    const payload = {
+      request_id:waRequestId, name,email,phone,
+      stage:'Ainda não sei',grade:'Preciso de orientação',
+      message:'Origem do lead: botão flutuante de WhatsApp da LP Matrículas 2027.',
+      source:'whatsapp_floating',
+      privacy_accepted:data.get('privacy') === 'on',
+      marketing_accepted:false,
+      campaign:CAMPAIGN,landing_page:location.href.slice(0,1800),
+      referrer:document.referrer.slice(0,1000),attribution:firstAttribution,
+      submitted_at:new Date().toISOString()
+    };
+    payload.honeypot = String(data.get('website') || '');
+    waSubmit.disabled = true;
+    waSubmit.querySelector('span:first-child').textContent = 'Registrando seus dados...';
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(),19000);
+      let response;
+      try {
+        response = await fetch('/api/lead', {
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload),signal:controller.signal
+        });
+      } finally { clearTimeout(timer); }
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.message || 'Não foi possível registrar os dados agora.');
+      waRequestId = null;
+      if (window.fbq) window.fbq('track','Lead',{content_name:'WhatsApp flutuante - Matrículas 2027 AA SBC'});
+      // Navega na mesma aba para não depender de pop-ups liberados pelo navegador.
+      window.location.assign(dest);
+    } catch(err) {
+      showWaFeedback(err.name === 'AbortError' ? 'O registro demorou. Para evitar duplicidade, confira com a escola antes de reenviar.' : (err.message || 'Não foi possível registrar os dados.'));
+      // Conversa direta continua possível se a integração estiver indisponível.
+      waFallback.href = dest;
+      waFallback.hidden = false;
+    } finally {
+      waSubmit.disabled = false;
+      waSubmit.querySelector('span:first-child').textContent = 'Iniciar conversa no WhatsApp';
     }
   });
 })();

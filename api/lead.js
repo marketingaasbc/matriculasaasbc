@@ -48,10 +48,11 @@ async function sendToRD(lead) {
   if (!apiKey) return {configured:false, ok:false, error:'API key ausente'};
   const stageTag = lead.stage === 'Educação Infantil' ? 'educacao-infantil' : lead.stage === 'Fundamental I' ? 'fundamental-i' : lead.stage === 'Fundamental II' ? 'fundamental-ii' : 'etapa-indefinida';
   const tags = ['aa-sbc', 'matriculas-2027', stageTag];
+  if (lead.source === 'whatsapp_floating') tags.push('via-whatsapp-flutuante');
   if (lead.marketing_accepted) tags.push('optin-novidades-site');
   const payload = {
     event_type: 'CONVERSION', event_family:'CDP', payload: {
-      conversion_identifier:'AA SBC | Matrículas 2027 | '+lead.stage,
+      conversion_identifier:lead.source === 'whatsapp_floating' ? 'AA SBC | Matrículas 2027 | WhatsApp' : 'AA SBC | Matrículas 2027 | '+lead.stage,
       name:lead.name, email:lead.email,
       mobile_phone: lead.phone.startsWith('55') ? '+'+lead.phone : '+55'+lead.phone,
       tags,
@@ -81,7 +82,7 @@ export default async function handler(req,res) {
   const lead = {
     request_id:CLEAN(body.request_id,100), name:CLEAN(body.name,120), email:CLEAN(body.email,180).toLowerCase(),
     phone:CLEAN(body.phone,25).replace(/\D/g,''),stage:CLEAN(body.stage,50),grade:CLEAN(body.grade,90),
-    message:CLEAN(body.message,1000), campaign:'Matriculas 2027 - AA SBC',
+    message:CLEAN(body.message,1000), campaign:'Matriculas 2027 - AA SBC', source:body.source === 'whatsapp_floating' ? 'whatsapp_floating' : 'landing_form',
     privacy_accepted:asBoolean(body.privacy_accepted), marketing_accepted:asBoolean(body.marketing_accepted),
     landing_page:CLEAN(body.landing_page,1800), referrer:CLEAN(body.referrer,1000),
     submitted_at:new Date().toISOString(),
