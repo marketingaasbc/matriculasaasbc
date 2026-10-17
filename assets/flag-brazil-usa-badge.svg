@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 132 132">
+  <defs>
+    <filter id="g" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#2c0d20" flood-opacity="0.28"/>
+    </filter>
+    <clipPath id="circle"><circle cx="66" cy="66" r="54"/></clipPath>
+    <clipPath id="leftHalf"><path d="M66,12 A54,54 0 0 0 66,120 Z"/></clipPath>
+    <clipPath id="rightHalf"><path d="M66,12 A54,54 0 0 1 66,120 Z"/></clipPath>
+    <radialGradient id="glow" cx="34%" cy="26%" r="75%">
+      <stop offset="0%" stop-color="#fff59c" stop-opacity="0.95"/>
+      <stop offset="28%" stop-color="#96ff5f" stop-opacity="0.42"/>
+      <stop offset="72%" stop-color="#00d669" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="66" cy="66" r="60" fill="url(#glow)" opacity="0.9"/>
+  <g filter="url(#g)">
+    <circle cx="66" cy="66" r="57" fill="#f8e7c5"/>
+    <circle cx="66" cy="66" r="54" fill="#ffffff"/>
+    <g clip-path="url(#circle)">
+      <image href="flag-br.svg" x="2" y="12" width="88" height="108" preserveAspectRatio="xMidYMid slice" clip-path="url(#leftHalf)"/>
+      <image href="flag-us.svg" x="48" y="12" width="82" height="108" preserveAspectRatio="xMidYMid slice" clip-path="url(#rightHalf)"/>
+      <rect x="64.6" y="13" width="2.8" height="106" fill="#ffffff" opacity="0.96"/>
+    </g>
+  </g>
+</svg>
