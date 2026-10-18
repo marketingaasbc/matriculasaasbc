@@ -4,5 +4,5 @@
  * NÃO use a URL do Praça Figueiras. Sem configurações na Vercel.
  */
 window.AA_CONFIG = {
-  appsScriptUrl: 'COLE_AQUI_A_URL_EXEC_DO_APPS_SCRIPT_DA_AMERICAN'
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzubbNRJimurVbrdLh7DQjySzY8tcjFoiN-ftNQtAz7dHeIBkL3eMG7n-Z1srgMTg/exec'
 };
