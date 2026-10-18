@@ -3,8 +3,13 @@
   // Confirme o Pixel com a equipe antes de publicar. Somente carregamos após consentimento.
   const META_PIXEL_ID = '4024453747862467';
   // Código de monitoramento fornecido pela escola em 17/10/2026.
-  // É carregado após o aceite dos cookies opcionais; nunca capta o formulário por si só.
+  // É carregado após o aceite dos cookies opcionais. Mapeie os formulários existentes no painel do RD.
   const RD_TRACKING_SRC = 'https://d335luupugsy2.cloudfront.net/js/loader-scripts/a5d223f7-2629-4480-9bfb-a446339fede4-loader.js';
+  // Envio como formulário HTML nativo, exatamente como na LP do Praça Figueiras.
+  // Sem /api/lead, sem RD API e sem variáveis de ambiente na Vercel.
+  const GAS_URL = String(window.AA_CONFIG?.appsScriptUrl || '').trim();
+  const GAS_READY = /^https:\/\/script\.google\.com\/macros\/s\/[^/\s]+\/exec(?:\?.*)?$/.test(GAS_URL);
+  const GAS_TIMEOUT_MS = 25000;
   const CAMPAIGN = 'Matriculas 2027 - AA SBC';
   // WhatsApp divulgado no site oficial da AA SBC (11) 4121-6355.
   // Para trocar o destino comercial, altere APENAS esta constante.
@@ -125,70 +130,47 @@
   const firstAttribution = getAttribution();
   const feedback = $('.form-feedback', leadForm);
   const submitButton = $('.submit-btn', leadForm);
-  const setFeedback = (message, isSuccess = false) => {
+  const leadSuccessDialog = $('#lead-success-dialog');
+  const gasTransport = $('#aaGasTransport');
+
+  $$('[data-success-close]').forEach(button => button.addEventListener('click', () => leadSuccessDialog?.close()));
+  leadSuccessDialog?.addEventListener('click', event => { if (event.target === leadSuccessDialog) leadSuccessDialog.close(); });
+  function showLeadSuccess() {
+    if (leadSuccessDialog?.showModal) leadSuccessDialog.showModal();
+    else setFeedback('Tudo certo! Recebemos seu interesse. Nossa equipe entrará em contato em breve.', true);
+  }
+  function setFeedback(message, isSuccess = false) {
     feedback.hidden = false;
     feedback.textContent = message;
     feedback.className = `form-feedback ${isSuccess ? 'is-success' : 'is-error'}`;
-  };
-  let pendingRequestId = null;
-  leadForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    feedback.hidden = true;
-    if (!leadForm.reportValidity()) return;
-    const data = new FormData(leadForm);
-    const phone = String(data.get('phone') || '').replace(/\D/g,'');
-    if (phone.length < 10 || phone.length > 11) {
-      setFeedback('Informe um número de WhatsApp válido, com DDD.');
-      phoneInput.focus(); return;
+  }
+  function id() {
+    try { return crypto.randomUUID(); }
+    catch { return `aa-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+  }
+  function setHidden(form, name, value) {
+    let field = Array.from(form.querySelectorAll('input[type="hidden"]')).find(input => input.name === name);
+    if (!field) {
+      field = document.createElement('input');
+      field.type = 'hidden'; field.name = name; form.appendChild(field);
     }
-    if (location.protocol === 'file:') {
-      setFeedback('Esta é a visualização local do site. Para receber cadastros reais, publique o projeto na Vercel e configure as integrações descritas no README.');
-      return;
-    }
-    // Reutiliza o mesmo ID se houver timeout/reenvio, evitando linhas duplicadas no Sheets.
-    if (!pendingRequestId) {
-      try { pendingRequestId = crypto.randomUUID(); }
-      catch { pendingRequestId = `aa-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
-    }
-    const requestId = pendingRequestId;
-    const payload = {
-      request_id: requestId,
-      name: String(data.get('name') || '').trim(),
-      phone, email: String(data.get('email') || '').trim().toLowerCase(),
-      stage: String(data.get('stage') || ''), grade: String(data.get('grade') || ''),
-      message: String(data.get('message') || '').trim(),
-      privacy_accepted: data.get('privacy') === 'on', marketing_accepted: data.get('marketing') === 'on',
-      honeypot: String(data.get('website') || ''),
-      campaign: CAMPAIGN, landing_page: location.href.slice(0,1800),
-      referrer: document.referrer.slice(0,1000), attribution: firstAttribution,
-      submitted_at: new Date().toISOString()
-    };
-    submitButton.disabled = true;
-    submitButton.querySelector('span:first-child').textContent = 'Enviando seus dados...';
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 19000);
-      let response;
-      try {
-        response = await fetch('/api/lead', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
-      } finally {clearTimeout(timer);}
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.ok) throw new Error(result.message || 'Não foi possível registrar seu interesse. Tente novamente em alguns instantes.');
-      setFeedback('Recebemos seu interesse! Obrigado por querer conhecer a American Academy. Nossa equipe de matrículas poderá entrar em contato pelos dados informados.', true);
-      leadForm.reset();
-      pendingRequestId = null;
-      setGrades('');
-      if (window.fbq) window.fbq('track', 'Lead', {content_name:'Matrículas 2027 - AA SBC'});
-    } catch (error) {
-      setFeedback(error.name === 'AbortError' ? 'A resposta demorou mais que o esperado. Confira com a equipe se seu cadastro chegou antes de reenviar.' : error.message);
-    } finally {
-      submitButton.disabled = false;
-      submitButton.querySelector('span:first-child').textContent = 'Quero agendar uma visita';
-    }
-  });
+    field.value = String(value ?? '');
+  }
+  function prepareSubmission(form, requestId, source, extra = {}) {
+    setHidden(form, 'request_id', requestId);
+    setHidden(form, 'source', source);
+    setHidden(form, 'campaign', CAMPAIGN);
+    setHidden(form, 'submitted_at', new Date().toISOString());
+    setHidden(form, 'landing_page', location.href.slice(0, 1800));
+    setHidden(form, 'referrer', document.referrer.slice(0, 1000));
+    setHidden(form, 'callback_origin', location.origin);
+    for (const [key,value] of Object.entries(firstAttribution)) setHidden(form,key,value);
+    for (const [key,value] of Object.entries(extra)) setHidden(form,key,value);
+    form.action = GAS_URL;
+    form.method = 'POST';
+    form.target = 'aaGasTransport';
+  }
 
-  // Botão flutuante: captura um lead simplificado antes de abrir o WhatsApp.
-  // O mesmo endpoint registra o contato no Google Sheets e na RD Station.
   const waTrigger = $('#wa-floating-trigger');
   const waDialog = $('#wa-contact-dialog');
   const waClose = $('#wa-close');
@@ -197,7 +179,11 @@
   const waSubmit = $('.wa-start', waForm);
   const waFeedback = $('.wa-feedback', waForm);
   const waFallback = $('#wa-fallback');
+  let mainRequestId = null;
   let waRequestId = null;
+  let pending = null;
+  let pendingTimer = null;
+
   function waMessage(name) {
     const firstName = name.trim().split(/\s+/)[0] || '';
     return `Olá! Meu nome é ${firstName}. Vim pelo site da American Academy SBC e gostaria de saber mais sobre as matrículas de 2027.`;
@@ -209,6 +195,89 @@
     waFeedback.hidden = false;
     waFeedback.textContent = message;
   }
+  function busy(which, busyNow) {
+    if (which === 'main') {
+      submitButton.disabled = busyNow;
+      submitButton.querySelector('span:first-child').textContent = busyNow ? 'Registrando seu interesse...' : 'Quero agendar uma visita';
+    } else {
+      waSubmit.disabled = busyNow;
+      waSubmit.querySelector('span:first-child').textContent = busyNow ? 'Registrando seus dados...' : 'Iniciar conversa no WhatsApp';
+    }
+  }
+  function clearPending() {
+    if (pendingTimer) clearTimeout(pendingTimer);
+    const prev = pending;
+    pending = null;
+    pendingTimer = null;
+    if (prev) busy(prev.which, false);
+    return prev;
+  }
+  function errorFor(which, message, dest = '') {
+    if (which === 'main') setFeedback(message);
+    else {
+      showWaFeedback(message);
+      if (dest) { waFallback.href = dest; waFallback.hidden = false; }
+    }
+  }
+  function startPending(which, requestId, dest = '') {
+    pending = {which, requestId, dest};
+    busy(which, true);
+    pendingTimer = setTimeout(() => {
+      const prev = clearPending();
+      if (prev) errorFor(prev.which, 'O Google não confirmou o registro. Confira se o cadastro chegou à planilha antes de tentar novamente.', prev.dest);
+    }, GAS_TIMEOUT_MS);
+  }
+  function checkTransport(which, dest = '') {
+    if (pending) { errorFor(which, 'Aguarde a confirmação do cadastro anterior antes de enviar novamente.', dest); return false; }
+    if (!GAS_READY) { errorFor(which, 'Ainda falta colocar a URL /exec do Google Apps Script no arquivo config.js.', dest); return false; }
+    if (location.protocol === 'file:') { errorFor(which, 'Abra o site por um endereço HTTPS para fazer o teste de cadastro.', dest); return false; }
+    return true;
+  }
+  // A URL do script é pública. A resposta do Google só confirma o registro
+  // quando contém o ID da solicitação que está aguardando retorno.
+  window.addEventListener('message', event => {
+    if (!pending || !event.data || event.data.type !== 'AA_LEAD_RESULT') return;
+    if (!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)*googleusercontent\.com)$/.test(event.origin)) return;
+    if (event.data.requestId !== pending.requestId) return;
+    const prev = clearPending();
+    if (event.data.ok === true) {
+      if (prev.which === 'main') {
+        leadForm.reset(); mainRequestId = null; setGrades(''); feedback.hidden = true;
+        showLeadSuccess();
+      } else {
+        waRequestId = null;
+        waForm.reset();
+        // Abrir na mesma aba não depende de autorização para pop-ups.
+        window.location.assign(prev.dest);
+      }
+      if (typeof window.fbq === 'function') window.fbq('track', 'Lead', {content_name:prev.which === 'main' ? 'Matrículas 2027 - AA SBC' : 'WhatsApp flutuante - Matrículas 2027 AA SBC'});
+    } else {
+      errorFor(prev.which, 'A planilha não confirmou o cadastro. Confira a implantação e as permissões do Apps Script.', prev.dest);
+    }
+  });
+
+  // No envio válido NÃO usamos preventDefault: o submit nativo da página
+  // alcança o código de integração de formulários do RD Station.
+  // A navegação é direcionada ao iframe oculto, como no Praça Figueiras.
+  leadForm.addEventListener('submit', e => {
+    feedback.hidden = true;
+    if (!leadForm.reportValidity()) { e.preventDefault(); return; }
+    const data = new FormData(leadForm);
+    const phone = String(data.get('phone') || '').replace(/\D/g,'');
+    if (phone.length < 10 || phone.length > 11) {
+      e.preventDefault(); setFeedback('Informe um número de WhatsApp válido, com DDD.');
+      phoneInput.focus(); return;
+    }
+    if (String(data.get('website') || '').trim()) { e.preventDefault(); return; }
+    if (!checkTransport('main')) { e.preventDefault(); return; }
+    if (!mainRequestId) mainRequestId = id();
+    prepareSubmission(leadForm, mainRequestId, 'formulario_visita', {
+      privacy_accepted:'true', marketing_accepted:data.get('marketing') === 'on' ? 'true' : 'false'
+    });
+    startPending('main',mainRequestId);
+    // Default submit → Google Apps Script (iframe, sem API Vercel, sem CORS).
+  });
+
   waTrigger?.addEventListener('click', () => {
     waFeedback.hidden = true;
     waFallback.hidden = true;
@@ -217,74 +286,34 @@
   waClose?.addEventListener('click', () => waDialog.close());
   waDialog?.addEventListener('click', (e) => { if (e.target === waDialog) waDialog.close(); });
   waPhone?.addEventListener('input', () => {
-    let d = waPhone.value.replace(/\D/g, '').slice(0, 11);
-    if (!d) waPhone.value = '';
-    else if (d.length <= 2) waPhone.value = `(${d}`;
-    else if (d.length <= 6) waPhone.value = `(${d.slice(0, 2)}) ${d.slice(2)}`;
-    else if (d.length <= 10) waPhone.value = `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-    else waPhone.value = `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+    const digits = waPhone.value.replace(/\D/g, '').slice(0, 11);
+    if (!digits) waPhone.value = '';
+    else if (digits.length <= 2) waPhone.value = `(${digits}`;
+    else if (digits.length <= 6) waPhone.value = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    else if (digits.length <= 10) waPhone.value = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    else waPhone.value = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   });
-  waForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  waForm?.addEventListener('submit', e => {
     waFeedback.hidden = true;
     waFallback.hidden = true;
-    if (!waForm.reportValidity()) return;
+    if (!waForm.reportValidity()) {e.preventDefault();return;}
     const data = new FormData(waForm);
     const name = String(data.get('name') || '').trim();
-    const phone = String(data.get('phone') || '').replace(/\D/g, '');
+    const phone = String(data.get('phone') || '').replace(/\D/g,'');
     const email = String(data.get('email') || '').trim().toLowerCase();
     const dest = waUrl(name);
     if (phone.length < 10 || phone.length > 11) {
-      showWaFeedback('Informe um número válido com DDD.');
-      waPhone.focus(); return;
+      e.preventDefault(); showWaFeedback('Informe um número válido com DDD.'); waPhone.focus(); return;
     }
-    if (location.protocol === 'file:') {
-      showWaFeedback('Publique a página na Vercel para registrar os contatos no Google Sheets e na RD Station.');
-      return;
-    }
-    // A mesma chave acompanha retries em caso de timeout.
-    if (!waRequestId) {
-      try { waRequestId = crypto.randomUUID(); }
-      catch { waRequestId = `aa-wa-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
-    }
-    const payload = {
-      request_id:waRequestId, name,email,phone,
+    if (String(data.get('website') || '').trim()) { e.preventDefault();return; }
+    if (!checkTransport('wa',dest)) {e.preventDefault();return;}
+    if (!waRequestId) waRequestId = id();
+    prepareSubmission(waForm, waRequestId, 'whatsapp_floating', {
       stage:'Ainda não sei',grade:'Preciso de orientação',
       message:'Origem do lead: botão flutuante de WhatsApp da LP Matrículas 2027.',
-      source:'whatsapp_floating',
-      privacy_accepted:data.get('privacy') === 'on',
-      marketing_accepted:false,
-      campaign:CAMPAIGN,landing_page:location.href.slice(0,1800),
-      referrer:document.referrer.slice(0,1000),attribution:firstAttribution,
-      submitted_at:new Date().toISOString()
-    };
-    payload.honeypot = String(data.get('website') || '');
-    waSubmit.disabled = true;
-    waSubmit.querySelector('span:first-child').textContent = 'Registrando seus dados...';
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(),19000);
-      let response;
-      try {
-        response = await fetch('/api/lead', {
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify(payload),signal:controller.signal
-        });
-      } finally { clearTimeout(timer); }
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.ok) throw new Error(result.message || 'Não foi possível registrar os dados agora.');
-      waRequestId = null;
-      if (window.fbq) window.fbq('track','Lead',{content_name:'WhatsApp flutuante - Matrículas 2027 AA SBC'});
-      // Navega na mesma aba para não depender de pop-ups liberados pelo navegador.
-      window.location.assign(dest);
-    } catch(err) {
-      showWaFeedback(err.name === 'AbortError' ? 'O registro demorou. Para evitar duplicidade, confira com a escola antes de reenviar.' : (err.message || 'Não foi possível registrar os dados.'));
-      // Conversa direta continua possível se a integração estiver indisponível.
-      waFallback.href = dest;
-      waFallback.hidden = false;
-    } finally {
-      waSubmit.disabled = false;
-      waSubmit.querySelector('span:first-child').textContent = 'Iniciar conversa no WhatsApp';
-    }
+      privacy_accepted:'true', marketing_accepted:'false'
+    });
+    startPending('wa',waRequestId,dest);
+    // O retorno confirmado abre a conversa de WhatsApp na mesma aba.
   });
 })();

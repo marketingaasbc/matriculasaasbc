@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="preload" as="image" href="assets/hero-alunos.webp">
+  <script src="config.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -152,7 +153,7 @@
 
     <section class="enrollment-section" id="matriculas"><div class="enrollment-orb enrollment-orb-one" aria-hidden="true"></div><div class="enrollment-orb enrollment-orb-two" aria-hidden="true"></div><div class="wrap enrollment-grid"><div class="enrollment-text reveal"><span class="eyebrow eyebrow-gold">MATRÍCULAS 2027</span><h2>A próxima descoberta<br>pode começar <em>com uma visita.</em></h2><p>Conte um pouco sobre seu filho. Nossa equipe poderá apresentar a etapa mais adequada, esclarecer suas dúvidas e orientar os próximos passos.</p><div class="enrollment-points"><div><span>01</span><p>Você nos conta a etapa de interesse.</p></div><div><span>02</span><p>Nossa equipe entra em contato.</p></div><div><span>03</span><p>Vocês conhecem a American Academy.</p></div></div></div>
       <div class="enrollment-form-card reveal reveal-delay"><div class="form-top"><span class="form-tag">VAMOS NOS CONHECER?</span><h3>Agende sua visita</h3><p>Preencha os dados e receba um contato da equipe.</p></div>
-        <form class="lead-form" id="lead-form" novalidate>
+        <form class="lead-form" id="lead-form" method="post" target="aaGasTransport" novalidate>
           <div class="form-row"><label>Seu nome completo <span>*</span><input type="text" name="name" autocomplete="name" placeholder="Como podemos chamar você?" maxlength="120" required></label><label>WhatsApp <span>*</span><input type="tel" name="phone" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" maxlength="16" required></label></div>
           <label>Seu melhor e-mail <span>*</span><input type="email" name="email" autocomplete="email" placeholder="voce@exemplo.com" maxlength="180" required></label>
           <div class="form-row"><label>Etapa de interesse <span>*</span><select name="stage" required><option value="">Selecione uma etapa</option><option value="Educação Infantil">Educação Infantil</option><option value="Fundamental I">Fundamental I</option><option value="Fundamental II">Fundamental II</option><option value="Ainda não sei">Ainda não sei</option></select></label><label>Ano / série <span>*</span><select name="grade" required><option value="">Escolha a etapa primeiro</option></select></label></div>
@@ -180,7 +181,7 @@
       <span class="wa-eyebrow">ATENDIMENTO AMERICAN ACADEMY</span>
       <h2 id="wa-contact-title">Vamos conversar?</h2>
       <p id="wa-contact-description">Preencha seus dados para iniciar uma conversa com nossa equipe no WhatsApp.</p>
-      <form id="wa-lead-form">
+      <form id="wa-lead-form" method="post" target="aaGasTransport">
         <label><span class="wa-field-label">Seu nome <b aria-hidden="true">*</b></span><input name="name" type="text" autocomplete="name" placeholder="Como podemos chamar você?" minlength="3" maxlength="120" required></label>
         <label><span class="wa-field-label">Seu melhor e-mail <b aria-hidden="true">*</b></span><input name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" maxlength="180" required></label>
         <label><span class="wa-field-label">WhatsApp com DDD <b aria-hidden="true">*</b></span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(11) 99999-9999" maxlength="16" required></label>
@@ -192,7 +193,20 @@
       </form>
     </div>
   </dialog>
+  <iframe name="aaGasTransport" id="aaGasTransport" title="Confirmação do cadastro" hidden aria-hidden="true"></iframe>
   <div class="cookie-banner" id="cookie-banner" hidden><div><strong>Sua privacidade importa.</strong><p>Utilizamos cookies essenciais para o funcionamento do site. Com sua autorização, também poderemos ativar o monitoramento do RD Station e o Pixel da Meta para analisar a origem das visitas e medir nossos anúncios.</p></div><div class="cookie-buttons"><button type="button" id="cookies-essential">Somente essenciais</button><button type="button" id="cookies-accept">Aceitar cookies</button></div></div>
-  <dialog id="privacy-modal" class="privacy-modal" aria-labelledby="privacy-title"><div class="modal-header"><h2 id="privacy-title">Aviso de privacidade</h2><button type="button" data-privacy-close aria-label="Fechar aviso de privacidade">×</button></div><div class="modal-body"><p>Ao enviar o formulário, seus dados de contato e as informações sobre a etapa de interesse são usados para responder ao seu pedido, orientar sobre matrículas e organizar o agendamento de uma visita à American Academy School São Bernardo do Campo.</p><p>O envio poderá ser realizado às ferramentas de gestão de contatos da escola, incluindo RD Station Marketing e Google Sheets, quando essas integrações estiverem configuradas. A opção de receber novidades é independente e facultativa.</p><p>Registramos informações de origem da visita, como UTMs, quando disponíveis, para entender a procedência dos pedidos. O monitoramento de navegação do RD Station e o Pixel da Meta somente são ativados quando os cookies opcionais são autorizados. O formulário envia o pedido de contato para os sistemas da escola independentemente dessa opção, com base no consentimento informado no próprio formulário.</p><p>Antes da publicação definitiva, a escola deverá incluir aqui os dados oficiais do controlador, o canal para solicitações de titulares, prazos de retenção e o texto jurídico aprovado para a LGPD.</p></div><button type="button" class="btn btn-burgundy modal-done" data-privacy-close>Entendi</button></dialog>
+
+  <!-- Confirmação do formulário de visita: exibida somente após confirmação do Google Sheets. -->
+  <dialog id="lead-success-dialog" class="lead-success-dialog" aria-labelledby="lead-success-title" aria-describedby="lead-success-description">
+    <div class="lead-success-inner">
+      <button type="button" class="lead-success-x" data-success-close aria-label="Fechar confirmação">×</button>
+      <div class="lead-success-symbol" aria-hidden="true"><svg viewBox="0 0 80 80" width="74" height="74" role="presentation"><circle cx="40" cy="40" r="37" fill="#f6e6cc"/><circle cx="40" cy="40" r="27" fill="#53182d"/><path d="m27 40 9 9 18-20" fill="none" stroke="#f7e0ae" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></svg><span class="lead-success-spark spark-1">✧</span><span class="lead-success-spark spark-2">✦</span><span class="lead-success-spark spark-3">✧</span></div>
+      <span class="lead-success-kicker">AMERICAN ACADEMY • MATRÍCULAS 2027</span>
+      <h2 id="lead-success-title">Tudo certo!<br><em>Recebemos seu interesse.</em></h2>
+      <p id="lead-success-description">Nossa equipe entrará em contato em breve para conversar sobre a próxima etapa da jornada do seu filho.</p>
+      <button type="button" class="btn btn-burgundy lead-success-action" data-success-close>Continuar navegando <span aria-hidden="true">→</span></button>
+    </div>
+  </dialog>
+  <dialog id="privacy-modal" class="privacy-modal" aria-labelledby="privacy-title"><div class="modal-header"><h2 id="privacy-title">Aviso de privacidade</h2><button type="button" data-privacy-close aria-label="Fechar aviso de privacidade">×</button></div><div class="modal-body"><p>Ao enviar o formulário, seus dados de contato e as informações sobre a etapa de interesse são usados para responder ao seu pedido, orientar sobre matrículas e organizar o agendamento de uma visita à American Academy School São Bernardo do Campo.</p><p>O envio poderá ser realizado às ferramentas de gestão de contatos da escola, incluindo Google Sheets. Quando autorizado e configurado, o monitoramento RD Station poderá também captar o formulário no próprio site. A opção de receber novidades é independente e facultativa.</p><p>Registramos informações de origem da visita, como UTMs, quando disponíveis, para entender a procedência dos pedidos. O monitoramento de navegação do RD Station e o Pixel da Meta somente são ativados quando os cookies opcionais são autorizados. O formulário registra o pedido de contato diretamente no Google Sheets com base no consentimento informado no próprio formulário.</p><p>Antes da publicação definitiva, a escola deverá incluir aqui os dados oficiais do controlador, o canal para solicitações de titulares, prazos de retenção e o texto jurídico aprovado para a LGPD.</p></div><button type="button" class="btn btn-burgundy modal-done" data-privacy-close>Entendi</button></dialog>
 </body>
 </html>

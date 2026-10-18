@@ -695,3 +695,30 @@
 /* Rótulos e indicação de obrigatoriedade na mesma linha */
 #wa-lead-form .wa-field-label{display:inline-flex;align-items:baseline;gap:5px;}
 #wa-lead-form .wa-field-label b{font-weight:850;color:#b13045;}
+
+
+/* ===== V3.1: popup de confirmação após cadastro ===== */
+.lead-success-dialog{
+  border:0;padding:0;background:transparent;color:#4a2335;
+  width:min(474px,calc(100vw - 32px));max-height:calc(100dvh - 26px);
+  overflow-y:auto;border-radius:27px;
+  box-shadow:0 30px 95px rgba(31,10,24,.40);
+}
+.lead-success-dialog::backdrop{background:rgba(34,10,25,.67);backdrop-filter:blur(5px);}
+.lead-success-inner{
+  position:relative;padding:38px 40px 36px;text-align:center;background:#fffaf2;
+  background-image:radial-gradient(circle at 50% -6%,rgba(226,184,109,.22),transparent 54%);
+}
+.lead-success-x{position:absolute;top:14px;right:14px;width:37px;height:37px;border:0;border-radius:50%;background:#f0e6de;color:#54182c;font-size:23px;display:grid;place-items:center;}
+.lead-success-x:hover{background:#e9d9cf;}
+.lead-success-symbol{width:108px;height:104px;position:relative;margin:0 auto 13px;display:grid;place-items:center;}
+.lead-success-symbol svg{filter:drop-shadow(0 8px 16px rgba(84,24,44,.14));}
+.lead-success-spark{position:absolute;color:#c69b53;line-height:1;}
+.spark-1{top:5px;left:12px;font-size:21px;}.spark-2{top:13px;right:6px;font-size:15px;}.spark-3{bottom:7px;right:6px;font-size:19px;}
+.lead-success-kicker{display:block;color:#996c41;font-size:10px;letter-spacing:.125em;font-weight:800;margin-bottom:13px;}
+.lead-success-dialog h2{font-family:var(--display);color:#54182c;font-size:clamp(31px,5.2vw,43px);line-height:1.13;letter-spacing:-.045em;margin:0 0 16px;font-weight:750;}
+.lead-success-dialog h2 em{font-style:normal;color:#9c6633;}
+.lead-success-dialog p{color:#74656a;font-size:14px;line-height:1.7;margin:0 auto 24px;max-width:340px;}
+.lead-success-action{min-height:53px;width:100%;display:flex;justify-content:center;align-items:center;gap:14px;}
+@media(max-width:480px){.lead-success-inner{padding:28px 24px 26px;}.lead-success-dialog p{font-size:13px;}.lead-success-symbol{margin-bottom:7px;}}
+@media(prefers-reduced-motion:reduce){.lead-success-symbol svg{animation:none;}}
