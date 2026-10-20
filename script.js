@@ -1,7 +1,8 @@
 (() => {
   'use strict';
-  // Confirme o Pixel com a equipe antes de publicar. Somente carregamos após consentimento.
-  const META_PIXEL_ID = '4024453747862467';
+  // Pixel Meta fornecido para a campanha de Matrículas 2027.
+  // É inicializado uma única vez, somente após o aceite dos cookies opcionais.
+  const META_PIXEL_ID = '2124688594797605';
   // Código de monitoramento fornecido pela escola em 17/10/2026.
   // É carregado após o aceite dos cookies opcionais. Mapeie os formulários existentes no painel do RD.
   const RD_TRACKING_SRC = 'https://d335luupugsy2.cloudfront.net/js/loader-scripts/a5d223f7-2629-4480-9bfb-a446339fede4-loader.js';
@@ -235,22 +236,36 @@
   }
   // A URL do script é pública. A resposta do Google só confirma o registro
   // quando contém o ID da solicitação que está aguardando retorno.
+  // Evento-padrão Lead do Meta: disparar apenas depois do ACK do Apps Script.
+  // Não transmitimos nome, e-mail nem telefone ao Pixel.
+  function trackConfirmedMetaLead(which) {
+    if (typeof window.fbq !== 'function') return false; // sem cookies opcionais, sem Pixel
+    window.fbq('track', 'Lead', {
+      content_name: which === 'main' ? 'Agendamento de visita - Matrículas 2027 AA SBC' : 'WhatsApp flutuante - Matrículas 2027 AA SBC'
+    });
+    return true;
+  }
+
   window.addEventListener('message', event => {
     if (!pending || !event.data || event.data.type !== 'AA_LEAD_RESULT') return;
     if (!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)*googleusercontent\.com)$/.test(event.origin)) return;
     if (event.data.requestId !== pending.requestId) return;
     const prev = clearPending();
     if (event.data.ok === true) {
+      // Dispare ANTES de mudar de página: a navegação para o WhatsApp pode
+      // interromper solicitações de rede feitas depois de window.location.assign().
+      const metaLeadSent = trackConfirmedMetaLead(prev.which);
       if (prev.which === 'main') {
         leadForm.reset(); mainRequestId = null; setGrades(''); feedback.hidden = true;
         showLeadSuccess();
       } else {
         waRequestId = null;
         waForm.reset();
-        // Abrir na mesma aba não depende de autorização para pop-ups.
-        window.location.assign(prev.dest);
+        // Pequena folga para o evento Lead ser enviado antes da saída da LP.
+        // Sem consentimento para o Pixel, não aguardamos.
+        if (metaLeadSent) setTimeout(() => window.location.assign(prev.dest), 450);
+        else window.location.assign(prev.dest);
       }
-      if (typeof window.fbq === 'function') window.fbq('track', 'Lead', {content_name:prev.which === 'main' ? 'Matrículas 2027 - AA SBC' : 'WhatsApp flutuante - Matrículas 2027 AA SBC'});
     } else {
       errorFor(prev.which, 'A planilha não confirmou o cadastro. Confira a implantação e as permissões do Apps Script.', prev.dest);
     }
