@@ -15,16 +15,48 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="preload" as="image" href="assets/hero-alunos.webp">
+  <!-- Consent Mode v2: deve executar ANTES do Google Tag Manager. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500
+    });
+    try {
+      if (localStorage.getItem('aa_sbc_cookie_choice') === 'all') {
+        gtag('consent', 'update', {
+          ad_storage: 'granted',
+          ad_user_data: 'granted',
+          ad_personalization: 'granted',
+          analytics_storage: 'granted'
+        });
+      }
+    } catch (e) { /* Armazenamento indisponível: manter consentimento negado. */ }
+  </script>
+  <!-- Google Tag Manager: o contêiner gerencia GA4, Google Ads e Meta. -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-MT7NPS3W');</script>
+  <!-- End Google Tag Manager -->
   <script src="config.js"></script>
   <script defer src="script.js"></script>
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-MT7NPS3W"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-</script>
+  <!-- Vercel Web Analytics; habilitar Analytics no painel da Vercel. -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MT7NPS3W"
+  height="0" width="0" style="display:none;visibility:hidden" title=""></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <div class="topline"><div class="wrap topline-inner"><span>Uma educação que abre possibilidades desde os primeiros anos.</span><a href="#matriculas">Matrículas 2027 <span aria-hidden="true">↗</span></a></div></div>
   <header class="site-header" id="inicio">
@@ -174,7 +206,7 @@
 
     <section class="location-section"><div class="wrap location-inner"><div><span class="eyebrow">VENHA NOS VISITAR</span><h2>Estamos em São Bernardo do Campo.</h2><p>Rua Atibaia, 150 · São Bernardo do Campo, SP · CEP 09751-080</p></div><a class="btn btn-cream location-btn" href="https://www.google.com/maps/search/?api=1&query=Rua+Atibaia+150+Sao+Bernardo+do+Campo+SP" target="_blank" rel="noopener noreferrer">Ver como chegar <span aria-hidden="true">↗</span></a></div></section>
   </main>
-  <footer class="site-footer"><div class="wrap footer-top"><div><a href="#inicio" class="brand footer-brand" aria-label="American Academy SBC, voltar ao início"><img class="official-brand-logo" src="assets/logo-aa-oficial-branco.webp" alt="American Academy School" width="900" height="755"></a><p>Educação internacional com metodologia americana e duplo currículo.</p></div><div class="footer-links"><a href="#diferencial">Duplo currículo</a><a href="#etapas">Etapas de ensino</a><a href="#campus">Estrutura</a><a href="#matriculas">Agende sua visita</a><button type="button" class="footer-privacy" data-privacy-open>Aviso de privacidade</button></div></div><div class="wrap footer-bottom"><span>© <span id="current-year">2026</span> American Academy School São Bernardo do Campo.</span><span>Uma formação para descobrir, aprender e crescer.</span></div></footer>
+  <footer class="site-footer"><div class="wrap footer-top"><div><a href="#inicio" class="brand footer-brand" aria-label="American Academy SBC, voltar ao início"><img class="official-brand-logo" src="assets/logo-aa-oficial-branco.webp" alt="American Academy School" width="900" height="755"></a><p>Educação internacional com metodologia americana e duplo currículo.</p></div><div class="footer-links"><a href="#diferencial">Duplo currículo</a><a href="#etapas">Etapas de ensino</a><a href="#campus">Estrutura</a><a href="#matriculas">Agende sua visita</a><button type="button" class="footer-privacy" data-privacy-open>Aviso de privacidade</button><button type="button" class="footer-privacy" data-cookie-settings>Preferências de cookies</button></div></div><div class="wrap footer-bottom"><span>© <span id="current-year">2026</span> American Academy School São Bernardo do Campo.</span><span>Uma formação para descobrir, aprender e crescer.</span></div></footer>
   <a href="#matriculas" class="mobile-sticky-cta"><span>Agende uma visita</span><span aria-hidden="true">↗</span></a>
 
   <!-- Acesso direto ao WhatsApp mediante identificação, captado também no RD e Sheets. -->
@@ -200,7 +232,7 @@
     </div>
   </dialog>
   <iframe name="aaGasTransport" id="aaGasTransport" title="Confirmação do cadastro" hidden aria-hidden="true"></iframe>
-  <div class="cookie-banner" id="cookie-banner" hidden><div><strong>Sua privacidade importa.</strong><p>Utilizamos cookies essenciais para o funcionamento do site. Com sua autorização, também poderemos ativar o monitoramento do RD Station e o Pixel da Meta para analisar a origem das visitas e medir nossos anúncios.</p></div><div class="cookie-buttons"><button type="button" id="cookies-essential">Somente essenciais</button><button type="button" id="cookies-accept">Aceitar cookies</button></div></div>
+  <div class="cookie-banner" id="cookie-banner" hidden role="region" aria-label="Preferências de cookies"><div><strong>Sua privacidade importa.</strong><p>Usamos cookies essenciais. Com sua autorização, ativamos o RD Station, o Google e o Pixel da Meta para medir visitas e anúncios.</p></div><div class="cookie-buttons"><button type="button" id="cookies-essential">Somente essenciais</button><button type="button" id="cookies-accept">Aceitar cookies</button></div></div>
 
   <!-- Confirmação do formulário de visita: exibida somente após confirmação do Google Sheets. -->
   <dialog id="lead-success-dialog" class="lead-success-dialog" aria-labelledby="lead-success-title" aria-describedby="lead-success-description">
@@ -213,6 +245,6 @@
       <button type="button" class="btn btn-burgundy lead-success-action" data-success-close>Continuar navegando <span aria-hidden="true">→</span></button>
     </div>
   </dialog>
-  <dialog id="privacy-modal" class="privacy-modal" aria-labelledby="privacy-title"><div class="modal-header"><h2 id="privacy-title">Aviso de privacidade</h2><button type="button" data-privacy-close aria-label="Fechar aviso de privacidade">×</button></div><div class="modal-body"><p>Ao enviar o formulário, seus dados de contato e as informações sobre a etapa de interesse são usados para responder ao seu pedido, orientar sobre matrículas e organizar o agendamento de uma visita à American Academy School São Bernardo do Campo.</p><p>O envio poderá ser realizado às ferramentas de gestão de contatos da escola, incluindo Google Sheets. Quando autorizado e configurado, o monitoramento RD Station poderá também captar o formulário no próprio site. A opção de receber novidades é independente e facultativa.</p><p>Registramos informações de origem da visita, como UTMs, quando disponíveis, para entender a procedência dos pedidos. O monitoramento de navegação do RD Station e o Pixel da Meta somente são ativados quando os cookies opcionais são autorizados. O formulário registra o pedido de contato diretamente no Google Sheets com base no consentimento informado no próprio formulário.</p><p>Antes da publicação definitiva, a escola deverá incluir aqui os dados oficiais do controlador, o canal para solicitações de titulares, prazos de retenção e o texto jurídico aprovado para a LGPD.</p></div><button type="button" class="btn btn-burgundy modal-done" data-privacy-close>Entendi</button></dialog>
+  <dialog id="privacy-modal" class="privacy-modal" aria-labelledby="privacy-title"><div class="modal-header"><h2 id="privacy-title">Aviso de privacidade</h2><button type="button" data-privacy-close aria-label="Fechar aviso de privacidade">×</button></div><div class="modal-body"><p>Ao enviar o formulário, seus dados de contato e as informações sobre a etapa de interesse são usados para responder ao seu pedido, orientar sobre matrículas e organizar o agendamento de uma visita à American Academy School São Bernardo do Campo.</p><p>O envio poderá ser realizado às ferramentas de gestão de contatos da escola, incluindo Google Sheets. Quando autorizado e configurado, o monitoramento RD Station poderá também captar o formulário no próprio site. A opção de receber novidades é independente e facultativa.</p><p>Registramos informações de origem da visita, como UTMs, quando disponíveis, para entender a procedência dos pedidos. O Google Tag Manager gerencia a medição do Google Analytics 4, Google Ads e Meta. Sem sua autorização, a configuração de consentimento do Google permanece negada e poderão ocorrer sinais de medição sem cookies; o RD Station e o Pixel da Meta somente devem ser ativados após sua autorização. O formulário registra o pedido de contato diretamente no Google Sheets com base no consentimento informado no próprio formulário. A preferência de cookies pode ser revisada a qualquer momento pelo rodapé.</p><p>Antes da publicação definitiva, a escola deverá incluir aqui os dados oficiais do controlador, o canal para solicitações de titulares, prazos de retenção e o texto jurídico aprovado para a LGPD.</p></div><button type="button" class="btn btn-burgundy modal-done" data-privacy-close>Entendi</button></dialog>
 </body>
 </html>

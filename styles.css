@@ -722,3 +722,13 @@
 .lead-success-action{min-height:53px;width:100%;display:flex;justify-content:center;align-items:center;gap:14px;}
 @media(max-width:480px){.lead-success-inner{padding:28px 24px 26px;}.lead-success-dialog p{font-size:13px;}.lead-success-symbol{margin-bottom:7px;}}
 @media(prefers-reduced-motion:reduce){.lead-success-symbol svg{animation:none;}}
+
+
+/* ===== V3.3: banner compacto e acessível no celular ===== */
+@media(max-width:760px){
+  .cookie-banner{bottom:76px;left:12px;right:12px;padding:10px 12px;gap:8px;border-radius:12px}
+  .cookie-banner strong{display:none}
+  .cookie-banner p{margin:0;font-size:11px;line-height:1.35}
+  .cookie-buttons{display:flex;gap:8px}
+  .cookie-buttons button{flex:1;min-height:40px;padding:6px 8px;font-size:12px}
+}

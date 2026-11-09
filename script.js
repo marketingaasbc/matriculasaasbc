@@ -1,8 +1,8 @@
 (() => {
   'use strict';
-  // Pixel Meta fornecido para a campanha de Matrículas 2027.
-  // É inicializado uma única vez, somente após o aceite dos cookies opcionais.
-  const META_PIXEL_ID = '2124688594797605';
+  // GA4, Google Ads e Meta são medidos via GTM-MT7NPS3W.
+  // A tag da Meta no GTM deve depender do evento consent_granted
+  // e exigir consentimento para anúncios. Nunca carregar o Pixel aqui diretamente.
   // Código de monitoramento fornecido pela escola em 17/10/2026.
   // É carregado após o aceite dos cookies opcionais. Mapeie os formulários existentes no painel do RD.
   const RD_TRACKING_SRC = 'https://d335luupugsy2.cloudfront.net/js/loader-scripts/a5d223f7-2629-4480-9bfb-a446339fede4-loader.js';
@@ -86,21 +86,37 @@
   $$('[data-privacy-close]').forEach(b => b.addEventListener('click', () => privacyDialog.close()));
   privacyDialog.addEventListener('click', ev => { if (ev.target === privacyDialog) privacyDialog.close(); });
 
-  function cookieChoice(choice) {
-    try { localStorage.setItem('aa_sbc_cookie_choice', choice); } catch { /* navegação privada */ }
-    $('#cookie-banner').hidden = true;
-    if (choice === 'all') { loadMetaPixel(); loadRdTracking(); }
+  function updateGoogleConsent(granted) {
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('consent', 'update', {
+      ad_storage: granted ? 'granted' : 'denied',
+      ad_user_data: granted ? 'granted' : 'denied',
+      ad_personalization: granted ? 'granted' : 'denied',
+      analytics_storage: granted ? 'granted' : 'denied'
+    });
   }
   function loadMetaPixel() {
-    if (!META_PIXEL_ID || window.fbq) return;
-    /* Código Meta Pixel padrão, carregado somente após consentimento. */
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);
-      t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-      (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    window.fbq('init', META_PIXEL_ID);
-    window.fbq('track','PageView');
+    // O Pixel está no GTM, não neste arquivo. Esta função só libera o consentimento.
+    updateGoogleConsent(true);
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({event: 'consent_granted'});
+  }
+  function cookieChoice(choice) {
+    let previous = null;
+    try {
+      previous = localStorage.getItem('aa_sbc_cookie_choice');
+      localStorage.setItem('aa_sbc_cookie_choice', choice);
+    } catch { /* Navegação privada: a escolha vale para esta página. */ }
+    $('#cookie-banner').hidden = true;
+    if (choice === 'all') {
+      loadMetaPixel();
+      loadRdTracking();
+    } else {
+      updateGoogleConsent(false);
+      // Uma tag já carregada não pode ser descarregada sem recarregar a página.
+      // Se revogar consentimento, recarregar com padrão negado.
+      if (previous === 'all') window.location.reload();
+    }
   }
   function loadRdTracking() {
     if (!RD_TRACKING_SRC || document.getElementById('rd-station-tracking-loader')) return;
@@ -117,6 +133,10 @@
   else if (preference !== 'essential') $('#cookie-banner').hidden = false;
   $('#cookies-accept').addEventListener('click', () => cookieChoice('all'));
   $('#cookies-essential').addEventListener('click', () => cookieChoice('essential'));
+  $$('[data-cookie-settings]').forEach(button => button.addEventListener('click', () => {
+    $('#cookie-banner').hidden = false;
+    $('#cookie-banner').querySelector('button')?.focus();
+  }));
 
   function getAttribution() {
     const params = new URLSearchParams(location.search);
@@ -234,16 +254,20 @@
     if (location.protocol === 'file:') { errorFor(which, 'Abra o site por um endereço HTTPS para fazer o teste de cadastro.', dest); return false; }
     return true;
   }
-  // A URL do script é pública. A resposta do Google só confirma o registro
-  // quando contém o ID da solicitação que está aguardando retorno.
-  // Evento-padrão Lead do Meta: disparar apenas depois do ACK do Apps Script.
-  // Não transmitimos nome, e-mail nem telefone ao Pixel.
-  function trackConfirmedMetaLead(which) {
-    if (typeof window.fbq !== 'function') return false; // sem cookies opcionais, sem Pixel
-    window.fbq('track', 'Lead', {
-      content_name: which === 'main' ? 'Agendamento de visita - Matrículas 2027 AA SBC' : 'WhatsApp flutuante - Matrículas 2027 AA SBC'
+  // Só registra conversões depois do ACK válido do Apps Script.
+  // Evento lead_form vai para o GTM: GA4, Google Ads e Meta (conforme consentimento).
+  // Nunca incluir telefone, e-mail ou nome no dataLayer para evitar envio de PII ao GA4/Ads.
+  const leadInfo = {};
+  function trackConfirmedLead(which, requestId) {
+    const info = leadInfo[which] || {};
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'lead_form',
+      pagina: which === 'main' ? 'agendamento-visita' : 'whatsapp-flutuante',
+      etapa: info.etapa || '',
+      event_id: requestId
     });
-    return true;
+    delete leadInfo[which];
   }
 
   window.addEventListener('message', event => {
@@ -252,19 +276,17 @@
     if (event.data.requestId !== pending.requestId) return;
     const prev = clearPending();
     if (event.data.ok === true) {
-      // Dispare ANTES de mudar de página: a navegação para o WhatsApp pode
-      // interromper solicitações de rede feitas depois de window.location.assign().
-      const metaLeadSent = trackConfirmedMetaLead(prev.which);
+      // Confirmar a conversão antes de trocar a tela ou sair para o WhatsApp.
+      trackConfirmedLead(prev.which, prev.requestId);
       if (prev.which === 'main') {
         leadForm.reset(); mainRequestId = null; setGrades(''); feedback.hidden = true;
         showLeadSuccess();
       } else {
         waRequestId = null;
         waForm.reset();
-        // Pequena folga para o evento Lead ser enviado antes da saída da LP.
-        // Sem consentimento para o Pixel, não aguardamos.
-        if (metaLeadSent) setTimeout(() => window.location.assign(prev.dest), 450);
-        else window.location.assign(prev.dest);
+        window.dataLayer.push({event: 'whatsapp_click'});
+        // Folga para o navegador encaminhar os eventos do GTM antes da navegação.
+        setTimeout(() => window.location.assign(prev.dest), 800);
       }
     } else {
       errorFor(prev.which, 'A planilha não confirmou o cadastro. Confira a implantação e as permissões do Apps Script.', prev.dest);
@@ -289,6 +311,7 @@
     prepareSubmission(leadForm, mainRequestId, 'formulario_visita', {
       privacy_accepted:'true', marketing_accepted:data.get('marketing') === 'on' ? 'true' : 'false'
     });
+    leadInfo.main = {etapa: String(data.get('stage') || '')};
     startPending('main',mainRequestId);
     // Default submit → Google Apps Script (iframe, sem API Vercel, sem CORS).
   });
@@ -328,6 +351,7 @@
       message:'Origem do lead: botão flutuante de WhatsApp da LP Matrículas 2027.',
       privacy_accepted:'true', marketing_accepted:'false'
     });
+    leadInfo.wa = {etapa: 'Ainda não sei'};
     startPending('wa',waRequestId,dest);
     // O retorno confirmado abre a conversa de WhatsApp na mesma aba.
   });

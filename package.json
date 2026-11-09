@@ -1,7 +1,10 @@
 {
   "name": "american-academy-sbc-matriculas-2027",
   "private": true,
-  "version": "3.2.0",
+  "version": "3.3.0",
   "type": "module",
-  "description": "Landing page estática: RD Station via monitoramento e Google Sheets via Apps Script"
+  "description": "Landing page estática: RD Station via monitoramento e Google Sheets via Apps Script",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
 }
